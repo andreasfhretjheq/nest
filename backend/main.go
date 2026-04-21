@@ -178,35 +178,55 @@ func parseTrustedProxies(raw string) []*net.IPNet {
 	return out
 }
 
+// ipInTrusted reports whether ip is contained in any of the trusted ranges.
+func ipInTrusted(ip net.IP, trusted []*net.IPNet) bool {
+	if ip == nil {
+		return false
+	}
+	for _, n := range trusted {
+		if n.Contains(ip) {
+			return true
+		}
+	}
+	return false
+}
+
 // clientIP returns the best-effort originating IP for r. X-Forwarded-For is
 // only honored when the immediate peer (r.RemoteAddr) is in one of the
-// trustedProxies ranges — otherwise a client could spoof the header to
-// bypass the rate limiter.
+// trustedProxies ranges. Because nginx/ALB/etc. append the real client IP
+// to any pre-existing X-Forwarded-For, an attacker could spoof the left
+// side of the chain; we walk the chain right-to-left and return the first
+// IP that does NOT belong to a trusted range.
 func clientIP(r *http.Request, trustedProxies []*net.IPNet) string {
 	peerHost, _, err := net.SplitHostPort(r.RemoteAddr)
 	if err != nil {
 		peerHost = r.RemoteAddr
 	}
 	peerIP := net.ParseIP(peerHost)
+	if !ipInTrusted(peerIP, trustedProxies) {
+		return peerHost
+	}
 
-	trusted := false
-	if peerIP != nil {
-		for _, n := range trustedProxies {
-			if n.Contains(peerIP) {
-				trusted = true
-				break
-			}
+	xff := r.Header.Get("X-Forwarded-For")
+	if xff == "" {
+		return peerHost
+	}
+	parts := strings.Split(xff, ",")
+	for i := len(parts) - 1; i >= 0; i-- {
+		candidate := strings.TrimSpace(parts[i])
+		if candidate == "" {
+			continue
+		}
+		ip := net.ParseIP(candidate)
+		if ip == nil {
+			// Header was tampered with; fall back to the peer.
+			return peerHost
+		}
+		if !ipInTrusted(ip, trustedProxies) {
+			return candidate
 		}
 	}
-	if trusted {
-		if h := r.Header.Get("X-Forwarded-For"); h != "" {
-			// Left-most entry is the original client per convention.
-			if i := strings.IndexByte(h, ','); i >= 0 {
-				return strings.TrimSpace(h[:i])
-			}
-			return strings.TrimSpace(h)
-		}
-	}
+	// Entire chain was trusted infrastructure — bill the peer.
 	return peerHost
 }
 

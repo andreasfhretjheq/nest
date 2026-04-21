@@ -8,6 +8,56 @@ import (
 	"testing"
 )
 
+func TestClientIP_UntrustedPeer_IgnoresXFF(t *testing.T) {
+	trusted := parseTrustedProxies("10.0.0.0/8")
+	req := httptest.NewRequest(http.MethodGet, "/", nil)
+	req.RemoteAddr = "203.0.113.9:45012"
+	req.Header.Set("X-Forwarded-For", "1.2.3.4")
+	if got := clientIP(req, trusted); got != "203.0.113.9" {
+		t.Fatalf("untrusted peer should ignore XFF; got %q", got)
+	}
+}
+
+func TestClientIP_TrustedPeer_WalksRightToLeft(t *testing.T) {
+	trusted := parseTrustedProxies("10.0.0.0/8,172.16.0.0/12")
+	req := httptest.NewRequest(http.MethodGet, "/", nil)
+	req.RemoteAddr = "10.0.0.2:45012"
+	// Spoof attempt: attacker prepended a fake IP; the real chain appended
+	// by the proxy ends with the actual client then the internal hops.
+	req.Header.Set("X-Forwarded-For", "1.1.1.1, 203.0.113.9, 172.16.0.5")
+	if got := clientIP(req, trusted); got != "203.0.113.9" {
+		t.Fatalf("trusted peer should skip trusted hops and return the real client; got %q", got)
+	}
+}
+
+func TestClientIP_EmptyTrusted_UsesPeer(t *testing.T) {
+	req := httptest.NewRequest(http.MethodGet, "/", nil)
+	req.RemoteAddr = "203.0.113.9:45012"
+	req.Header.Set("X-Forwarded-For", "1.2.3.4")
+	if got := clientIP(req, nil); got != "203.0.113.9" {
+		t.Fatalf("default (no trusted proxies) must use peer; got %q", got)
+	}
+}
+
+func TestClientIP_TrustedPeer_NoXFF(t *testing.T) {
+	trusted := parseTrustedProxies("10.0.0.0/8")
+	req := httptest.NewRequest(http.MethodGet, "/", nil)
+	req.RemoteAddr = "10.0.0.2:45012"
+	if got := clientIP(req, trusted); got != "10.0.0.2" {
+		t.Fatalf("trusted peer with no XFF should fall back to peer; got %q", got)
+	}
+}
+
+func TestClientIP_AllTrustedChain_FallsBackToPeer(t *testing.T) {
+	trusted := parseTrustedProxies("10.0.0.0/8")
+	req := httptest.NewRequest(http.MethodGet, "/", nil)
+	req.RemoteAddr = "10.0.0.2:45012"
+	req.Header.Set("X-Forwarded-For", "10.0.0.3, 10.0.0.4")
+	if got := clientIP(req, trusted); got != "10.0.0.2" {
+		t.Fatalf("entire chain trusted should bill peer; got %q", got)
+	}
+}
+
 func TestHealth(t *testing.T) {
 	rr := httptest.NewRecorder()
 	req := httptest.NewRequest(http.MethodGet, "/api/health", nil)
