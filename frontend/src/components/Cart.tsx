@@ -67,7 +67,9 @@ export function Cart({ open, items, onClose, onUpdateQty, onRemove, onClear }: P
         zipCode: form.zipCode,
         paymentMethod: usePix ? "pix" : "card",
       });
-      setOrder({ id: res.orderId, total: res.totalCents });
+      // Backend only totals product lines; fold in the client-picked shipping
+      // so the confirmation screen matches the pre-checkout total the user saw.
+      setOrder({ id: res.orderId, total: res.totalCents + shippingCents });
       onClear();
     } catch (err) {
       setError(

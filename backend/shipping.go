@@ -304,7 +304,32 @@ type quoteCacheEntry struct {
 }
 
 func newQuoteCache(ttl time.Duration) *quoteCache {
-	return &quoteCache{ttl: ttl, items: make(map[string]quoteCacheEntry)}
+	c := &quoteCache{ttl: ttl, items: make(map[string]quoteCacheEntry)}
+	if ttl > 0 {
+		go c.gc()
+	}
+	return c
+}
+
+// gc evicts expired entries on a fixed cadence so the cache map can't grow
+// unbounded with stale keys that the reader path never revisits.
+func (c *quoteCache) gc() {
+	interval := c.ttl
+	if interval < time.Minute {
+		interval = time.Minute
+	}
+	t := time.NewTicker(interval)
+	defer t.Stop()
+	for range t.C {
+		c.mu.Lock()
+		now := time.Now()
+		for k, e := range c.items {
+			if now.Sub(e.at) > c.ttl {
+				delete(c.items, k)
+			}
+		}
+		c.mu.Unlock()
+	}
 }
 
 func (c *quoteCache) get(key string) ([]ShippingQuoteOption, bool) {
