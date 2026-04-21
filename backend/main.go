@@ -146,18 +146,68 @@ func minFloat(a, b float64) float64 {
 
 // ----- Middleware -----
 
-func clientIP(r *http.Request) string {
-	if h := r.Header.Get("X-Forwarded-For"); h != "" {
-		if i := strings.IndexByte(h, ','); i >= 0 {
-			return strings.TrimSpace(h[:i])
+// parseTrustedProxies parses a comma-separated list of CIDRs or single IPs.
+// Invalid entries are silently dropped (they are logged at startup). Returns
+// nil when the list is empty, which means "never trust X-Forwarded-For".
+func parseTrustedProxies(raw string) []*net.IPNet {
+	if raw == "" {
+		return nil
+	}
+	var out []*net.IPNet
+	for _, tok := range strings.Split(raw, ",") {
+		tok = strings.TrimSpace(tok)
+		if tok == "" {
+			continue
 		}
-		return strings.TrimSpace(h)
+		if !strings.Contains(tok, "/") {
+			if ip := net.ParseIP(tok); ip != nil {
+				bits := 32
+				if ip.To4() == nil {
+					bits = 128
+				}
+				tok = fmt.Sprintf("%s/%d", tok, bits)
+			}
+		}
+		_, netw, err := net.ParseCIDR(tok)
+		if err != nil {
+			log.Printf("trusted-proxies: ignoring invalid entry %q: %v", tok, err)
+			continue
+		}
+		out = append(out, netw)
 	}
-	host, _, err := net.SplitHostPort(r.RemoteAddr)
+	return out
+}
+
+// clientIP returns the best-effort originating IP for r. X-Forwarded-For is
+// only honored when the immediate peer (r.RemoteAddr) is in one of the
+// trustedProxies ranges — otherwise a client could spoof the header to
+// bypass the rate limiter.
+func clientIP(r *http.Request, trustedProxies []*net.IPNet) string {
+	peerHost, _, err := net.SplitHostPort(r.RemoteAddr)
 	if err != nil {
-		return r.RemoteAddr
+		peerHost = r.RemoteAddr
 	}
-	return host
+	peerIP := net.ParseIP(peerHost)
+
+	trusted := false
+	if peerIP != nil {
+		for _, n := range trustedProxies {
+			if n.Contains(peerIP) {
+				trusted = true
+				break
+			}
+		}
+	}
+	if trusted {
+		if h := r.Header.Get("X-Forwarded-For"); h != "" {
+			// Left-most entry is the original client per convention.
+			if i := strings.IndexByte(h, ','); i >= 0 {
+				return strings.TrimSpace(h[:i])
+			}
+			return strings.TrimSpace(h)
+		}
+	}
+	return peerHost
 }
 
 func withSecurityHeaders(next http.Handler) http.Handler {
@@ -193,9 +243,9 @@ func withCORS(allowed map[string]struct{}, next http.Handler) http.Handler {
 	})
 }
 
-func withRateLimit(rl *rateLimiter, next http.Handler) http.Handler {
+func withRateLimit(rl *rateLimiter, trustedProxies []*net.IPNet, next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if !rl.allow(clientIP(r)) {
+		if !rl.allow(clientIP(r, trustedProxies)) {
 			writeJSON(w, http.StatusTooManyRequests, map[string]string{"error": "rate limit exceeded"})
 			return
 		}
@@ -210,11 +260,11 @@ func withBodyLimit(limit int64, next http.Handler) http.Handler {
 	})
 }
 
-func withLogging(next http.Handler) http.Handler {
+func withLogging(trustedProxies []*net.IPNet, next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		start := time.Now()
 		next.ServeHTTP(w, r)
-		log.Printf("%s %s %s %s", clientIP(r), r.Method, r.URL.Path, time.Since(start))
+		log.Printf("%s %s %s %s", clientIP(r, trustedProxies), r.Method, r.URL.Path, time.Since(start))
 	})
 }
 
@@ -404,6 +454,12 @@ func main() {
 	}
 
 	rl := newRateLimiter(60, 1) // 60-token bucket, refill 1 token/sec
+	trustedProxies := parseTrustedProxies(os.Getenv("TRUSTED_PROXIES"))
+	if len(trustedProxies) == 0 {
+		log.Printf("TRUSTED_PROXIES not set — X-Forwarded-For ignored for rate limiting (rate limit keyed on direct peer)")
+	} else {
+		log.Printf("TRUSTED_PROXIES: %d range(s) configured", len(trustedProxies))
+	}
 
 	mux := http.NewServeMux()
 	mux.HandleFunc("/api/health", handleHealth)
@@ -416,10 +472,10 @@ func main() {
 
 	var h http.Handler = mux
 	h = withBodyLimit(1<<16, h) // 64KiB
-	h = withRateLimit(rl, h)
+	h = withRateLimit(rl, trustedProxies, h)
 	h = withCORS(allowedOriginsFromEnv(), h)
 	h = withSecurityHeaders(h)
-	h = withLogging(h)
+	h = withLogging(trustedProxies, h)
 
 	srv := &http.Server{
 		Addr:              ":" + port,

@@ -29,6 +29,11 @@ Variáveis úteis:
 
 - `PORT` (padrão `8080`)
 - `ALLOWED_ORIGINS` (padrão `http://localhost:5173,http://127.0.0.1:5173`)
+- `TRUSTED_PROXIES` — lista de CIDRs (ou IPs) de reverse proxies em que o
+  servidor pode confiar para ler `X-Forwarded-For`. Quando vazio (padrão),
+  o header é ignorado e o rate limit é aplicado ao peer direto. Exemplo atrás
+  de Cloudflare + um balanceador interno:
+  `TRUSTED_PROXIES=10.0.0.0/8,172.16.0.0/12,173.245.48.0/20`
 
 Testes:
 
@@ -85,7 +90,9 @@ ao seed em memória do Go.
   DENY`, `X-Content-Type-Options: nosniff`, `Referrer-Policy`,
   `Permissions-Policy`.
 - CORS restrito por allowlist vinda de `ALLOWED_ORIGINS`.
-- Rate limit em memória (token bucket por IP, GC automático).
+- Rate limit em memória (token bucket por IP, GC automático). A IP de origem
+  só considera `X-Forwarded-For` quando o peer pertence a `TRUSTED_PROXIES`,
+  evitando spoof trivial do header.
 - `http.MaxBytesReader` para todos os corpos + timeouts de leitura/escrita.
 - `json.Decoder` com `DisallowUnknownFields` no checkout.
 - Validação estrita (email, tamanhos, quantidades, caracteres de controle).
