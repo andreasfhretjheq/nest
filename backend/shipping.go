@@ -115,14 +115,20 @@ type meCalculateRequest struct {
 // carriers return an `error` string instead of prices — we surface those
 // so the UI can show a reason when a carrier is unavailable.
 type meQuote struct {
-	ID           int             `json:"id"`
-	Name         string          `json:"name"`
-	Price        json.RawMessage `json:"price"`          // sometimes string, sometimes number
-	CustomPrice  json.RawMessage `json:"custom_price"`   // same
-	DeliveryTime int             `json:"delivery_time"`  // business days
-	DeliveryMin  int             `json:"delivery_range_min"`
-	DeliveryMax  int             `json:"delivery_range_max"`
-	Company      struct {
+	ID            int             `json:"id"`
+	Name          string          `json:"name"`
+	Price         json.RawMessage `json:"price"`         // sometimes string, sometimes number
+	CustomPrice   json.RawMessage `json:"custom_price"`  // same
+	DeliveryTime  int             `json:"delivery_time"` // business days
+	DeliveryRange struct {
+		Min int `json:"min"`
+		Max int `json:"max"`
+	} `json:"delivery_range"`
+	CustomDeliveryRange struct {
+		Min int `json:"min"`
+		Max int `json:"max"`
+	} `json:"custom_delivery_range"`
+	Company struct {
 		ID      int    `json:"id"`
 		Name    string `json:"name"`
 		Picture string `json:"picture"`
@@ -409,11 +415,18 @@ func normalizeQuotes(raw []meQuote) []ShippingQuoteOption {
 			CompanyID:   q.Company.ID,
 			CompanyName: q.Company.Name,
 			ServiceName: q.Name,
-			DeliveryMin: q.DeliveryMin,
-			DeliveryMax: q.DeliveryMax,
+			DeliveryMin: q.DeliveryRange.Min,
+			DeliveryMax: q.DeliveryRange.Max,
 			Error:       q.Error,
 		}
-		if q.DeliveryMin == 0 && q.DeliveryMax == 0 && q.DeliveryTime > 0 {
+		// Prefer the seller's custom (possibly longer) promise when they set one.
+		if q.CustomDeliveryRange.Min > 0 {
+			opt.DeliveryMin = q.CustomDeliveryRange.Min
+		}
+		if q.CustomDeliveryRange.Max > 0 {
+			opt.DeliveryMax = q.CustomDeliveryRange.Max
+		}
+		if opt.DeliveryMin == 0 && opt.DeliveryMax == 0 && q.DeliveryTime > 0 {
 			opt.DeliveryMin = q.DeliveryTime
 			opt.DeliveryMax = q.DeliveryTime
 		}

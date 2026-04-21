@@ -99,7 +99,10 @@ func TestBuildPackages_RejectsBadInput(t *testing.T) {
 
 func TestNormalizeQuotes(t *testing.T) {
 	raw := []meQuote{
-		{ID: 1, Name: "PAC", Price: json.RawMessage(`"19.90"`), DeliveryMin: 5, DeliveryMax: 8, Company: struct {
+		{ID: 1, Name: "PAC", Price: json.RawMessage(`"19.90"`), DeliveryRange: struct {
+			Min int `json:"min"`
+			Max int `json:"max"`
+		}{Min: 5, Max: 8}, Company: struct {
 			ID      int    `json:"id"`
 			Name    string `json:"name"`
 			Picture string `json:"picture"`
@@ -150,8 +153,8 @@ func TestShippingQuote_EndToEnd(t *testing.T) {
 			t.Errorf("decode body: %v", err)
 		}
 		_, _ = w.Write([]byte(`[
-			{"id":1,"name":"PAC","price":"21.50","delivery_range_min":5,"delivery_range_max":9,"company":{"id":1,"name":"Correios"}},
-			{"id":2,"name":"SEDEX","price":"35.00","delivery_range_min":2,"delivery_range_max":4,"company":{"id":1,"name":"Correios"}}
+			{"id":1,"name":"PAC","price":"21.50","delivery_range":{"min":5,"max":9},"company":{"id":1,"name":"Correios"}},
+			{"id":2,"name":"SEDEX","price":"35.00","delivery_range":{"min":2,"max":4},"company":{"id":1,"name":"Correios"}}
 		]`))
 	}))
 	defer srv.Close()
@@ -239,7 +242,7 @@ func TestShippingQuote_CachesEqualRequests(t *testing.T) {
 	calls := 0
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		calls++
-		_, _ = w.Write([]byte(`[{"id":1,"name":"PAC","price":"10.00","delivery_range_min":5,"delivery_range_max":9,"company":{"id":1,"name":"Correios"}}]`))
+		_, _ = w.Write([]byte(`[{"id":1,"name":"PAC","price":"10.00","delivery_range":{"min":5,"max":9},"company":{"id":1,"name":"Correios"}}]`))
 	}))
 	defer srv.Close()
 	c := newShippingClient(shippingConfig{BaseURL: srv.URL, AccessToken: "t", UserAgent: "NAST", OriginZip: "01310100"})
