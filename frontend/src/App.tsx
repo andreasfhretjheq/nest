@@ -13,6 +13,8 @@ import { Cart } from "./components/Cart";
 import { ProductModal } from "./components/ProductModal";
 import { ScrollProgress } from "./components/ScrollProgress";
 import { LoadingScreen } from "./components/LoadingScreen";
+import { ScanIntro } from "./components/ScanIntro";
+import { shouldShowIntro } from "./lib/intro";
 import { WhatsAppButton } from "./components/WhatsAppButton";
 
 const WHATSAPP_NUMBER = "5511994281802";
@@ -36,6 +38,7 @@ function loadCart(): CartItem[] {
 function App() {
   const [products, setProducts] = useState<Product[]>(FALLBACK_PRODUCTS);
   const [loading, setLoading] = useState(true);
+  const [introVisible, setIntroVisible] = useState(() => shouldShowIntro());
   const [cart, setCart] = useState<CartItem[]>(() => loadCart());
   const [cartOpen, setCartOpen] = useState(false);
   const [modal, setModal] = useState<Product | null>(null);
@@ -152,7 +155,8 @@ function App() {
       />
 
       <WhatsAppButton phone={WHATSAPP_NUMBER} />
-      <LoadingScreen show={loading} />
+      <LoadingScreen show={loading && !introVisible} />
+      {introVisible && <ScanIntro onFinish={() => setIntroVisible(false)} />}
     </div>
   );
 }
