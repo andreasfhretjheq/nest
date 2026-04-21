@@ -1,10 +1,11 @@
 import { AnimatePresence, motion } from "framer-motion";
 import { useMemo, useState } from "react";
 import type { CartItem } from "../types";
-import { api } from "../api";
+import { api, type ShippingOption } from "../api";
 import { formatBRL } from "../utils/format";
 import { Close, Minus, Plus, Lock } from "./icons";
 import { ProductArt } from "./ProductArt";
+import { ShippingQuote } from "./ShippingQuote";
 
 type Props = {
   open: boolean;
@@ -28,6 +29,7 @@ export function Cart({ open, items, onClose, onUpdateQty, onRemove, onClear }: P
   const [order, setOrder] = useState<{ id: string; total: number } | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [usePix, setUsePix] = useState(true);
+  const [shipping, setShipping] = useState<ShippingOption | null>(null);
 
   const handleClose = () => {
     setOrder(null);
@@ -42,7 +44,9 @@ export function Cart({ open, items, onClose, onUpdateQty, onRemove, onClear }: P
     () => items.reduce((acc, it) => acc + it.product.pixPriceCents * it.quantity, 0),
     [items],
   );
-  const total = usePix ? totalPix : totalCard;
+  const subtotal = usePix ? totalPix : totalCard;
+  const shippingCents = shipping?.priceCents ?? 0;
+  const total = subtotal + shippingCents;
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -302,6 +306,14 @@ export function Cart({ open, items, onClose, onUpdateQty, onRemove, onClear }: P
                   </div>
                 </div>
 
+                <ShippingQuote
+                  items={items}
+                  zipCode={form.zipCode}
+                  onZipChange={(z) => setForm((f) => ({ ...f, zipCode: z }))}
+                  selectedServiceId={shipping?.serviceId ?? null}
+                  onSelect={(o) => setShipping(o)}
+                />
+
                 <div className="grid grid-cols-2 gap-2">
                   <input
                     required
@@ -342,17 +354,31 @@ export function Cart({ open, items, onClose, onUpdateQty, onRemove, onClear }: P
                   />
                 </div>
 
-                <div className="flex items-center justify-between border-t border-white/10 pt-3 text-white">
-                  <div className="eyebrow text-white/60">Total</div>
-                  <div className="text-right">
-                    <div className="text-xl font-black">
-                      {formatBRL(total)}
-                    </div>
-                    {usePix && totalCard > totalPix && (
-                      <div className="text-[11px] text-white/40 line-through">
-                        {formatBRL(totalCard)}
+                <div className="flex flex-col gap-1 border-t border-white/10 pt-3 text-white">
+                  <div className="flex items-center justify-between text-[11px] uppercase tracking-[0.3em] text-white/50">
+                    <span>Subtotal</span>
+                    <span className="font-mono text-white/80">
+                      {formatBRL(subtotal)}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between text-[11px] uppercase tracking-[0.3em] text-white/50">
+                    <span>Frete</span>
+                    <span className="font-mono text-white/80">
+                      {shipping ? formatBRL(shippingCents) : "—"}
+                    </span>
+                  </div>
+                  <div className="mt-1 flex items-center justify-between">
+                    <div className="eyebrow text-white/60">Total</div>
+                    <div className="text-right">
+                      <div className="text-xl font-black">
+                        {formatBRL(total)}
                       </div>
-                    )}
+                      {usePix && totalCard > totalPix && (
+                        <div className="text-[11px] text-white/40 line-through">
+                          {formatBRL(totalCard + shippingCents)}
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </div>
 

@@ -35,6 +35,37 @@ Variáveis úteis:
   de Cloudflare + um balanceador interno:
   `TRUSTED_PROXIES=10.0.0.0/8,172.16.0.0/12,173.245.48.0/20`
 
+### Melhor Envio (frete)
+
+As rotas `/api/shipping/*` integram com a API oficial da Melhor Envio
+(sandbox por padrão). Defina as variáveis abaixo para ativar:
+
+| Variável | Obrigatória | Exemplo |
+|---|---|---|
+| `MELHOR_ENVIO_ENV` | opcional | `sandbox` (padrão) ou `production` |
+| `MELHOR_ENVIO_ACCESS_TOKEN_SANDBOX` | sim (sandbox) | JWT criado em https://sandbox.melhorenvio.com.br/painel/gerenciar/tokens |
+| `MELHOR_ENVIO_ACCESS_TOKEN` | sim (produção) | JWT criado em https://melhorenvio.com.br/painel/gerenciar/tokens |
+| `MELHOR_ENVIO_ORIGIN_ZIP` | sim | CEP de origem (só dígitos, ex: `01310100`) |
+| `MELHOR_ENVIO_USER_AGENT` | recomendado | `NAST Streetwear (contato@seu-dominio.com)` — a ME rejeita chamadas sem UA válido |
+| `ADMIN_TOKEN` | sim p/ etiqueta+rastreio | token secreto que o admin envia no header `X-Admin-Token` |
+
+Escopos mínimos do token: `shipping-calculate`, `shipping-cart`,
+`shipping-checkout`, `shipping-companies`, `shipping-services`,
+`shipping-tracking`, `cart-read`, `orders-read`.
+
+Endpoints:
+
+- `POST /api/shipping/quote` (público, rate-limited, cache 5 min) —
+  calcula opções de frete. Body:
+  `{"zipCode":"04567-000","items":[{"productId":"p-tee-bw-black","quantity":1}]}`
+- `POST /api/shipping/label` (admin, `X-Admin-Token`) — cria o item no
+  carrinho ME, faz o checkout (debita saldo da ME), gera e imprime a etiqueta.
+- `GET  /api/shipping/track/:orderId` (admin, `X-Admin-Token`) — rastreio.
+
+Dimensões/peso de cada SKU ficam em `backend/shipping.go` (`packagingPresets`).
+Pese e ajuste antes de ir pra produção — quando um SKU não está na tabela,
+caímos num envelope conservador de 250g / 30×25×3 cm.
+
 Testes:
 
 ```bash

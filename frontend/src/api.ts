@@ -17,6 +17,17 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
   return (await res.json()) as T;
 }
 
+export type ShippingOption = {
+  serviceId: number;
+  companyId: number;
+  companyName: string;
+  serviceName: string;
+  priceCents: number;
+  deliveryMinDays: number;
+  deliveryMaxDays: number;
+  error?: string;
+};
+
 export const api = {
   listProducts: (category?: string) =>
     request<Product[]>(
@@ -36,4 +47,12 @@ export const api = {
       method: "POST",
       body: JSON.stringify(payload),
     }),
+  quoteShipping: (payload: {
+    zipCode: string;
+    items: { productId: string; quantity: number }[];
+  }) =>
+    request<{ options: ShippingOption[]; cached: boolean }>(
+      `/api/shipping/quote`,
+      { method: "POST", body: JSON.stringify(payload) },
+    ),
 };

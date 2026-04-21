@@ -484,11 +484,23 @@ func main() {
 		log.Printf("TRUSTED_PROXIES: %d range(s) configured", len(trustedProxies))
 	}
 
+	shipCfg := loadShippingConfig()
+	if shipCfg.AccessToken == "" {
+		log.Printf("Melhor Envio: token not configured — /api/shipping/* will return 503")
+	} else {
+		log.Printf("Melhor Envio: %s origin=%s", shipCfg.BaseURL, shipCfg.OriginZip)
+	}
+	shipClient := newShippingClient(shipCfg)
+	shipCache := newQuoteCache(5 * time.Minute)
+
 	mux := http.NewServeMux()
 	mux.HandleFunc("/api/health", handleHealth)
 	mux.HandleFunc("/api/products", handleProducts)
 	mux.HandleFunc("/api/products/", handleProductByID)
 	mux.HandleFunc("/api/checkout", handleCheckout)
+	mux.HandleFunc("/api/shipping/quote", handleShippingQuote(shipClient, shipCache))
+	mux.HandleFunc("/api/shipping/label", handleShippingLabel(shipClient))
+	mux.HandleFunc("/api/shipping/track/", handleShippingTrack(shipClient))
 	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		writeJSON(w, http.StatusNotFound, map[string]string{"error": "not found"})
 	})
