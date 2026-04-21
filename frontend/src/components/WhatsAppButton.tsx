@@ -32,7 +32,7 @@ export function WhatsAppButton({
         animate={{ scale: [1, 1.6, 1], opacity: [0.7, 0, 0.7] }}
         transition={{ duration: 2.2, repeat: Infinity, ease: "easeOut" }}
       />
-      <span className="relative flex h-14 w-14 items-center justify-center rounded-full bg-[var(--color-accent)] text-black shadow-[0_8px_32px_-8px_rgba(198,255,0,0.6)] transition group-hover:bg-white">
+      <span className="relative flex h-14 w-14 items-center justify-center rounded-full bg-[var(--color-accent)] text-black shadow-[0_8px_32px_-8px_rgba(57,255,20,0.6)] transition group-hover:bg-white">
         <WhatsApp className="h-6 w-6" />
       </span>
       <span className="pointer-events-none hidden whitespace-nowrap rounded-full bg-white px-3 py-1 text-[10px] font-bold uppercase tracking-[0.3em] text-black opacity-0 shadow group-hover:opacity-100 md:inline-block">

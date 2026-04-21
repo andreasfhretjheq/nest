@@ -61,7 +61,7 @@ ao seed em memória do Go.
 - **Número do WhatsApp flutuante:** `frontend/src/App.tsx` — constante
   `WHATSAPP_NUMBER` no formato E.164 sem o `+` (ex: `5511999999999`).
 - **Cor de destaque:** `frontend/src/index.css` — variável
-  `--color-accent` (padrão `#c6ff00`).
+  `--color-accent` (padrão `#39ff14`).
 - **Produtos:** `backend/main.go` (seed em memória) + fallback em
   `frontend/src/data/fallback.ts`. Mantenha as duas listas em sincronia.
 

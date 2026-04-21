@@ -20,8 +20,7 @@ import { Particles } from "./components/Particles";
 import { LoadingScreen } from "./components/LoadingScreen";
 import { WhatsAppButton } from "./components/WhatsAppButton";
 
-// Placeholder number — swap for the store's real number before launch.
-const WHATSAPP_NUMBER = "5511999999999";
+const WHATSAPP_NUMBER = "5511994281802";
 
 function cartKey(id: string, size: string, color: string) {
   return `${id}|${size}|${color}`;

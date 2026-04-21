@@ -8,7 +8,7 @@ import {
 import { useEffect, useRef } from "react";
 import { ArrowDown } from "./icons";
 
-const HEADLINE = ["STREET", "WEAR", "AUTORAL."];
+const HEADLINE = ["FEITO", "PRA QUEM", "SABE."];
 
 export function Hero() {
   const ref = useRef<HTMLDivElement | null>(null);

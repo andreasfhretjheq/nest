@@ -156,7 +156,7 @@ function colorSwatch(name: string): string {
     cinza: "#6b7280",
     roxo: "#7c3aed",
     verde: "#4a5a2a",
-    "verde-neon": "#c6ff00",
+    "verde-neon": "#39ff14",
     índigo: "#1c2a49",
     azul: "#1e3a8a",
     bege: "#d6b98c",

@@ -37,7 +37,7 @@ function fabricFor(name: string): string {
     "off-white": "#d9d6cc",
     cinza: "#3f3f46",
     verde: "#4a5a2a",
-    "verde-neon": "#c6ff00",
+    "verde-neon": "#39ff14",
     índigo: "#1c2a49",
     azul: "#1e3a8a",
     bege: "#c8b590",
@@ -53,13 +53,13 @@ function palette(base: string): FabricColor {
   const isLight =
     base === "#e8e8e8" ||
     base === "#d9d6cc" ||
-    base === "#c6ff00" ||
+    base === "#39ff14" ||
     base === "#c8b590";
   return {
     main: base,
     shadow: isLight ? "rgba(0,0,0,0.15)" : "rgba(255,255,255,0.08)",
     stitch: isLight ? "rgba(0,0,0,0.35)" : "rgba(255,255,255,0.3)",
-    accent: "#c6ff00",
+    accent: "#39ff14",
   };
 }
 
