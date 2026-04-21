@@ -245,9 +245,12 @@ func withSecurityHeaders(next http.Handler) http.Handler {
 
 func withCORS(allowed map[string]struct{}, next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// Vary: Origin is always emitted so intermediary caches key the
+		// response on Origin even when this particular request was
+		// same-origin / had no Origin header.
+		w.Header().Set("Vary", "Origin")
 		origin := r.Header.Get("Origin")
 		if origin != "" {
-			w.Header().Set("Vary", "Origin")
 			if _, ok := allowed[origin]; ok {
 				w.Header().Set("Access-Control-Allow-Origin", origin)
 				w.Header().Set("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
