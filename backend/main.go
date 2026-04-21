@@ -53,11 +53,12 @@ type CartItem struct {
 }
 
 type CheckoutRequest struct {
-	Items    []CartItem `json:"items"`
-	Name     string     `json:"name"`
-	Email    string     `json:"email"`
-	Address  string     `json:"address"`
-	ZipCode  string     `json:"zipCode"`
+	Items         []CartItem `json:"items"`
+	Name          string     `json:"name"`
+	Email         string     `json:"email"`
+	Address       string     `json:"address"`
+	ZipCode       string     `json:"zipCode"`
+	PaymentMethod string     `json:"paymentMethod"`
 }
 
 type CheckoutResponse struct {
@@ -332,6 +333,14 @@ func handleCheckout(w http.ResponseWriter, r *http.Request) {
 		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid zip"})
 		return
 	}
+	payment := strings.TrimSpace(strings.ToLower(req.PaymentMethod))
+	if payment == "" {
+		payment = "card"
+	}
+	if payment != "pix" && payment != "card" {
+		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid payment method"})
+		return
+	}
 	total := 0
 	for _, it := range req.Items {
 		if it.Quantity <= 0 || it.Quantity > 20 {
@@ -341,7 +350,11 @@ func handleCheckout(w http.ResponseWriter, r *http.Request) {
 		found := false
 		for _, p := range catalog {
 			if p.ID == it.ProductID {
-				total += p.PriceCents * it.Quantity
+				unit := p.PriceCents
+				if payment == "pix" {
+					unit = p.PixPriceCents
+				}
+				total += unit * it.Quantity
 				found = true
 				break
 			}
@@ -358,8 +371,8 @@ func handleCheckout(w http.ResponseWriter, r *http.Request) {
 		CreatedAt:   time.Now().UTC().Format(time.RFC3339),
 		EstimatedAt: time.Now().Add(5 * 24 * time.Hour).UTC().Format(time.RFC3339),
 	}
-	log.Printf("checkout: order=%s name=%q email=%q items=%d total=%d zip=%s address-len=%d",
-		resp.OrderID, name, req.Email, len(req.Items), total, zip, len(address))
+	log.Printf("checkout: order=%s name=%q email=%q items=%d total=%d payment=%s zip=%s address-len=%d",
+		resp.OrderID, name, req.Email, len(req.Items), total, payment, zip, len(address))
 	writeJSON(w, http.StatusOK, resp)
 }
 

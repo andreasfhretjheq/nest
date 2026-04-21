@@ -1,7 +1,10 @@
 import { NestLogo } from "./NestLogo";
 import { Instagram, TikTok, WhatsApp } from "./icons";
 
-export function Footer() {
+type Props = { whatsAppNumber?: string };
+
+export function Footer({ whatsAppNumber }: Props = {}) {
+  const waHref = whatsAppNumber ? `https://wa.me/${whatsAppNumber}` : "https://wa.me/";
   return (
     <footer className="relative border-t border-white/10 bg-black/80 px-6 py-16 text-sm text-white/50">
       <div className="mx-auto grid max-w-7xl grid-cols-2 gap-10 md:grid-cols-4">
@@ -66,7 +69,7 @@ export function Footer() {
             </li>
             <li>
               <a
-                href="https://wa.me/"
+                href={waHref}
                 target="_blank"
                 rel="noreferrer"
                 className="inline-flex h-9 w-9 items-center justify-center border border-white/15 text-white/60 transition hover:border-[var(--color-accent)] hover:text-[var(--color-accent)]"

@@ -140,7 +140,7 @@ function App() {
         <Newsletter />
       </main>
 
-      <Footer />
+      <Footer whatsAppNumber={WHATSAPP_NUMBER} />
 
       <ProductModal
         product={modal}

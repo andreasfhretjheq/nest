@@ -30,6 +30,7 @@ export const api = {
     email: string;
     address: string;
     zipCode: string;
+    paymentMethod: "pix" | "card";
   }) =>
     request<CheckoutResponse>(`/api/checkout`, {
       method: "POST",

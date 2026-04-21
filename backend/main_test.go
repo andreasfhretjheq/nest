@@ -42,13 +42,14 @@ func TestProductByID_NotFound(t *testing.T) {
 	}
 }
 
-func TestCheckout_Valid(t *testing.T) {
+func TestCheckout_ValidCard(t *testing.T) {
 	body := CheckoutRequest{
-		Items:   []CartItem{{ProductID: "p-core-tee", Quantity: 2, Size: "M", Color: "preto"}},
-		Name:    "Andreas Teste",
-		Email:   "andreas@example.com",
-		Address: "Rua das Flores, 123",
-		ZipCode: "01000-000",
+		Items:         []CartItem{{ProductID: "p-core-tee", Quantity: 2, Size: "M", Color: "preto"}},
+		Name:          "Andreas Teste",
+		Email:         "andreas@example.com",
+		Address:       "Rua das Flores, 123",
+		ZipCode:       "01000-000",
+		PaymentMethod: "card",
 	}
 	b, _ := json.Marshal(body)
 	rr := httptest.NewRecorder()
@@ -62,7 +63,50 @@ func TestCheckout_Valid(t *testing.T) {
 		t.Fatalf("decode: %v", err)
 	}
 	if out.TotalCents != 19990*2 {
-		t.Fatalf("unexpected total %d", out.TotalCents)
+		t.Fatalf("unexpected total %d (want %d)", out.TotalCents, 19990*2)
+	}
+}
+
+func TestCheckout_ValidPix(t *testing.T) {
+	body := CheckoutRequest{
+		Items:         []CartItem{{ProductID: "p-core-tee", Quantity: 1, Size: "M", Color: "preto"}},
+		Name:          "Andreas Teste",
+		Email:         "andreas@example.com",
+		Address:       "Rua das Flores, 123",
+		ZipCode:       "01000-000",
+		PaymentMethod: "pix",
+	}
+	b, _ := json.Marshal(body)
+	rr := httptest.NewRecorder()
+	req := httptest.NewRequest(http.MethodPost, "/api/checkout", bytes.NewReader(b))
+	handleCheckout(rr, req)
+	if rr.Code != http.StatusOK {
+		t.Fatalf("expected 200, got %d: %s", rr.Code, rr.Body.String())
+	}
+	var out CheckoutResponse
+	if err := json.NewDecoder(rr.Body).Decode(&out); err != nil {
+		t.Fatalf("decode: %v", err)
+	}
+	if out.TotalCents != 18991 {
+		t.Fatalf("unexpected total %d (want 18991 pix)", out.TotalCents)
+	}
+}
+
+func TestCheckout_InvalidPaymentMethod(t *testing.T) {
+	body := CheckoutRequest{
+		Items:         []CartItem{{ProductID: "p-core-tee", Quantity: 1, Size: "M", Color: "preto"}},
+		Name:          "Andreas Teste",
+		Email:         "andreas@example.com",
+		Address:       "Rua 1",
+		ZipCode:       "01000",
+		PaymentMethod: "crypto",
+	}
+	b, _ := json.Marshal(body)
+	rr := httptest.NewRecorder()
+	req := httptest.NewRequest(http.MethodPost, "/api/checkout", bytes.NewReader(b))
+	handleCheckout(rr, req)
+	if rr.Code != http.StatusBadRequest {
+		t.Fatalf("expected 400, got %d", rr.Code)
 	}
 }
 

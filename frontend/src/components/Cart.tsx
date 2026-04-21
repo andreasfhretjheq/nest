@@ -56,6 +56,7 @@ export function Cart({ open, items, onClose, onUpdateQty, onRemove, onClear }: P
         email: form.email,
         address: form.address,
         zipCode: form.zipCode,
+        paymentMethod: usePix ? "pix" : "card",
       });
       setOrder({ id: res.orderId, total: res.totalCents });
       onClear();
