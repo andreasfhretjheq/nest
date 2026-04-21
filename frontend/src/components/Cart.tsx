@@ -338,17 +338,8 @@ export function Cart({ open, items, onClose, onUpdateQty, onRemove, onClear }: P
                   />
                   <input
                     required
-                    placeholder="CEP"
-                    className="border border-white/15 bg-transparent px-3 py-2.5 text-sm text-white placeholder-white/40 outline-none focus:border-[var(--color-accent)]"
-                    value={form.zipCode}
-                    onChange={(e) =>
-                      setForm({ ...form, zipCode: e.target.value })
-                    }
-                  />
-                  <input
-                    required
                     placeholder="Endereço"
-                    className="border border-white/15 bg-transparent px-3 py-2.5 text-sm text-white placeholder-white/40 outline-none focus:border-[var(--color-accent)]"
+                    className="col-span-2 border border-white/15 bg-transparent px-3 py-2.5 text-sm text-white placeholder-white/40 outline-none focus:border-[var(--color-accent)]"
                     value={form.address}
                     onChange={(e) =>
                       setForm({ ...form, address: e.target.value })
