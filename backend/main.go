@@ -1,4 +1,4 @@
-// Package main implements the backend API for NEST — streetwear autoral.
+// Package main implements the backend API for NAST — streetwear autoral.
 // Powers product catalog, checkout and security-hardened serving for the
 // store frontend.
 //
@@ -71,12 +71,12 @@ type CheckoutResponse struct {
 
 // ----- In-memory catalog (seeded on startup) -----
 
-// NEST drop 01 — quatro peças, produção curta.
+// NAST streetwear · edição limitada — 4 peças.
 var catalog = []Product{
-	{ID: "p-core-tee", Name: "Boxy Tee CORE", Description: "Camiseta boxy fit em algodão pesado 240g/m² com gola reforçada e barra reta.", PriceCents: 19990, PixPriceCents: 18991, Category: "Camisetas", Image: "core-tee", BackImage: "core-tee-back", Colors: []string{"preto", "branco"}, Sizes: []string{"P", "M", "G", "GG"}, Tags: []string{"novo"}, Stock: 48},
-	{ID: "p-night-hoodie", Name: "Moletom NIGHT", Description: "Moletom oversized em moletinho flanelado 440g com capuz forrado e bolso canguru reforçado.", PriceCents: 39990, PixPriceCents: 37991, Category: "Moletons", Image: "night-hoodie", BackImage: "night-hoodie-back", Colors: []string{"preto", "off-white"}, Sizes: []string{"P", "M", "G", "GG"}, Tags: []string{"drop 01"}, Stock: 22},
-	{ID: "p-raw-jorts", Name: "Jorts RAW", Description: "Short jeans baggy em denim cru 14oz com barras desfiadas e modelagem baggy fit.", PriceCents: 25990, PixPriceCents: 24691, Category: "Peças", Image: "raw-jorts", BackImage: "raw-jorts-back", Colors: []string{"índigo", "preto"}, Sizes: []string{"38", "40", "42", "44"}, Tags: []string{"limitado"}, Stock: 16},
-	{ID: "p-emblem-cap", Name: "Dad Hat EMBLEM", Description: "Boné estruturado em sarja com bordado em alto relevo e fivela metálica traseira ajustável.", PriceCents: 12990, PixPriceCents: 12341, Category: "Acessórios", Image: "emblem-cap", BackImage: "emblem-cap-back", Colors: []string{"preto", "off-white", "verde"}, Sizes: []string{"único"}, Tags: []string{"best-seller"}, Stock: 110},
+	{ID: "p-tee-bw-black", Name: "CAMISETA BLACK & WHITE", Description: "Camiseta preta em algodão 30.1 penteado com print cursivo frontal em branco. Corte regular, gola reforçada.", PriceCents: 8990, PixPriceCents: 8541, Category: "Camisetas", Image: "tee-cursive-black.jpg", BackImage: "tee-cursive-black.jpg", Colors: []string{"preto"}, Sizes: []string{"P", "M", "G", "Baby Look"}, Tags: []string{"edição limitada"}, Stock: 24},
+	{ID: "p-tee-bw-white", Name: "CAMISA BLACK & WHITE", Description: "Camiseta branca em algodão 30.1 penteado com print cursivo frontal em preto. Corte regular, gola reforçada.", PriceCents: 8990, PixPriceCents: 8541, Category: "Camisetas", Image: "tee-cursive-white.png", BackImage: "tee-cursive-white.png", Colors: []string{"branco"}, Sizes: []string{"P", "M", "G", "Baby Look"}, Tags: []string{"edição limitada"}, Stock: 24},
+	{ID: "p-boxy-black", Name: "CAMISA BOXY NAST PRETA", Description: "Camiseta boxy preta em algodão pesado 240g com modelagem oversized, ombro caído e etiqueta tecida NAST.", PriceCents: 9990, PixPriceCents: 9491, Category: "Boxy", Image: "boxy-black.jpg", BackImage: "boxy-black.jpg", Colors: []string{"preto"}, Sizes: []string{"P", "M", "G"}, Tags: []string{"boxy fit"}, Stock: 18},
+	{ID: "p-boxy-white", Name: "CAMISETA BOXY NAST BRANCA", Description: "Camiseta boxy branca em algodão pesado 240g com modelagem oversized, ombro caído e etiqueta tecida NAST.", PriceCents: 9990, PixPriceCents: 9491, Category: "Boxy", Image: "boxy-white.jpg", BackImage: "boxy-white.jpg", Colors: []string{"branco"}, Sizes: []string{"P", "M", "G"}, Tags: []string{"boxy fit"}, Stock: 18},
 }
 
 // ----- Rate limiter (token bucket per IP) -----
@@ -431,7 +431,7 @@ func main() {
 		MaxHeaderBytes:    1 << 14, // 16KiB
 	}
 
-	log.Printf("NEST backend listening on :%s", port)
+	log.Printf("NAST backend listening on :%s", port)
 	if err := srv.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
 		log.Fatal(err)
 	}

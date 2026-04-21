@@ -44,7 +44,7 @@ func TestProductByID_NotFound(t *testing.T) {
 
 func TestCheckout_ValidCard(t *testing.T) {
 	body := CheckoutRequest{
-		Items:         []CartItem{{ProductID: "p-core-tee", Quantity: 2, Size: "M", Color: "preto"}},
+		Items:         []CartItem{{ProductID: "p-tee-bw-black", Quantity: 2, Size: "M", Color: "preto"}},
 		Name:          "Andreas Teste",
 		Email:         "andreas@example.com",
 		Address:       "Rua das Flores, 123",
@@ -62,14 +62,14 @@ func TestCheckout_ValidCard(t *testing.T) {
 	if err := json.NewDecoder(rr.Body).Decode(&out); err != nil {
 		t.Fatalf("decode: %v", err)
 	}
-	if out.TotalCents != 19990*2 {
-		t.Fatalf("unexpected total %d (want %d)", out.TotalCents, 19990*2)
+	if out.TotalCents != 8990*2 {
+		t.Fatalf("unexpected total %d (want %d)", out.TotalCents, 8990*2)
 	}
 }
 
 func TestCheckout_ValidPix(t *testing.T) {
 	body := CheckoutRequest{
-		Items:         []CartItem{{ProductID: "p-core-tee", Quantity: 1, Size: "M", Color: "preto"}},
+		Items:         []CartItem{{ProductID: "p-tee-bw-black", Quantity: 1, Size: "M", Color: "preto"}},
 		Name:          "Andreas Teste",
 		Email:         "andreas@example.com",
 		Address:       "Rua das Flores, 123",
@@ -87,14 +87,14 @@ func TestCheckout_ValidPix(t *testing.T) {
 	if err := json.NewDecoder(rr.Body).Decode(&out); err != nil {
 		t.Fatalf("decode: %v", err)
 	}
-	if out.TotalCents != 18991 {
-		t.Fatalf("unexpected total %d (want 18991 pix)", out.TotalCents)
+	if out.TotalCents != 8541 {
+		t.Fatalf("unexpected total %d (want 8541 pix)", out.TotalCents)
 	}
 }
 
 func TestCheckout_InvalidPaymentMethod(t *testing.T) {
 	body := CheckoutRequest{
-		Items:         []CartItem{{ProductID: "p-core-tee", Quantity: 1, Size: "M", Color: "preto"}},
+		Items:         []CartItem{{ProductID: "p-tee-bw-black", Quantity: 1, Size: "M", Color: "preto"}},
 		Name:          "Andreas Teste",
 		Email:         "andreas@example.com",
 		Address:       "Rua 1",
@@ -112,7 +112,7 @@ func TestCheckout_InvalidPaymentMethod(t *testing.T) {
 
 func TestCheckout_InvalidEmail(t *testing.T) {
 	body := CheckoutRequest{
-		Items:   []CartItem{{ProductID: "p-core-tee", Quantity: 1}},
+		Items:   []CartItem{{ProductID: "p-tee-bw-black", Quantity: 1}},
 		Name:    "x",
 		Email:   "not-an-email",
 		Address: "Rua 1",

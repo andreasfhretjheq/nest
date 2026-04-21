@@ -1,4 +1,4 @@
-import { AnimatePresence, motion } from "framer-motion";
+import { motion } from "framer-motion";
 import { useState } from "react";
 import type { Product } from "../types";
 import { ProductArt } from "./ProductArt";
@@ -10,14 +10,12 @@ type Props = {
   onOpen: (p: Product) => void;
 };
 
-// Editorial streetwear card: front/back art swap on hover, Pix badge,
-// color swatches and size pills right on the card. Minimal, square, dense.
+// Streetwear product card: photo on top (white background so the fabric
+// stands out), metadata underneath. Colors + sizes listed on the card
+// itself so shoppers can skim without opening the modal.
 export function ProductCard({ product, index, onOpen }: Props) {
-  const [hover, setHover] = useState(false);
   const [color, setColor] = useState(product.colors[0] ?? "preto");
-
   const pixPct = pixDiscountPercent(product.priceCents, product.pixPriceCents);
-  const showBack = hover;
 
   return (
     <motion.div
@@ -25,40 +23,27 @@ export function ProductCard({ product, index, onOpen }: Props) {
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, amount: 0.2 }}
       transition={{ delay: index * 0.06, type: "spring", stiffness: 90 }}
-      onHoverStart={() => setHover(true)}
-      onHoverEnd={() => setHover(false)}
       className="group relative flex flex-col border border-white/10 bg-[var(--color-bg-soft)] text-left transition-colors hover:border-white/30"
     >
       <button
         type="button"
         onClick={() => onOpen(product)}
-        className="relative block aspect-square w-full overflow-hidden bg-black/40"
+        className="relative block aspect-square w-full overflow-hidden bg-white"
         aria-label={`Abrir detalhes de ${product.name}`}
       >
-        {/* front/back cross-fade */}
-        <AnimatePresence initial={false} mode="popLayout">
-          <motion.div
-            key={showBack ? "back" : "front"}
-            initial={{ opacity: 0, scale: 1.02 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.98 }}
-            transition={{ duration: 0.35 }}
-            className="absolute inset-0 flex items-center justify-center"
-          >
-            <ProductArt
-              image={showBack ? product.backImage : product.image}
-              color={color}
-              size={260}
-            />
-          </motion.div>
-        </AnimatePresence>
+        <motion.div
+          whileHover={{ scale: 1.03 }}
+          transition={{ type: "spring", stiffness: 200, damping: 22 }}
+          className="absolute inset-0 flex items-center justify-center"
+        >
+          <ProductArt image={product.image} alt={product.name} size={320} />
+        </motion.div>
 
-        {/* tag badges */}
         <div className="absolute left-3 top-3 flex gap-2">
           {product.tags.slice(0, 2).map((t) => (
             <span
               key={t}
-              className="bg-black/70 px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.25em] text-white backdrop-blur"
+              className="bg-black/80 px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.25em] text-white backdrop-blur"
             >
               {t}
             </span>
@@ -69,15 +54,6 @@ export function ProductCard({ product, index, onOpen }: Props) {
             -{pixPct}% pix
           </div>
         )}
-
-        {/* hover hint */}
-        <motion.div
-          initial={{ opacity: 0, y: 8 }}
-          animate={{ opacity: showBack ? 1 : 0, y: showBack ? 0 : 8 }}
-          className="absolute bottom-3 left-1/2 -translate-x-1/2 bg-white px-3 py-1 text-[10px] font-bold uppercase tracking-[0.3em] text-black"
-        >
-          costas
-        </motion.div>
       </button>
 
       <div className="flex flex-1 flex-col gap-3 p-4">
@@ -93,11 +69,10 @@ export function ProductCard({ product, index, onOpen }: Props) {
             whileHover={{ x: 2 }}
             className="shrink-0 text-[11px] font-bold uppercase tracking-[0.3em] text-[var(--color-accent)]"
           >
-            comprar →
+            ver peça →
           </motion.button>
         </div>
 
-        {/* Color swatches */}
         <div className="flex items-center gap-2">
           {product.colors.map((c) => (
             <button
@@ -118,7 +93,6 @@ export function ProductCard({ product, index, onOpen }: Props) {
           ))}
         </div>
 
-        {/* Size pills */}
         <div className="flex flex-wrap gap-1.5">
           {product.sizes.map((s) => (
             <span
@@ -151,7 +125,7 @@ export function ProductCard({ product, index, onOpen }: Props) {
 function colorSwatch(name: string): string {
   const map: Record<string, string> = {
     preto: "#0b0b12",
-    branco: "#e5e7eb",
+    branco: "#f3f3f3",
     "off-white": "#ece8de",
     cinza: "#6b7280",
     roxo: "#7c3aed",

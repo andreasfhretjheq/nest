@@ -1,26 +1,40 @@
 import { AnimatePresence, motion } from "framer-motion";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import type { Product } from "../types";
 import { ProductArt } from "./ProductArt";
+import { SizeChartLink } from "./SizeChart";
 import { formatBRL, pixDiscountPercent } from "../utils/format";
-import { Close, Plus } from "./icons";
+import { Close, Plus, WhatsApp } from "./icons";
 
 type Props = {
   product: Product | null;
   onClose: () => void;
   onAdd: (p: Product, size: string, color: string) => void;
+  whatsAppNumber: string;
 };
 
-export function ProductModal({ product, onClose, onAdd }: Props) {
+// Known promo codes: coupon -> percent off (applied on top of the current
+// price, not stacked with Pix). Keep in sync with backend if we ever wire
+// it up there — for now it's a client-side teaser.
+const COUPONS: Record<string, number> = {
+  NAST10: 10,
+  BEMVINDO: 5,
+};
+
+export function ProductModal({ product, onClose, onAdd, whatsAppNumber }: Props) {
   const [size, setSize] = useState<string>(product?.sizes[0] ?? "");
   const [color, setColor] = useState<string>(product?.colors[0] ?? "");
-  const [side, setSide] = useState<"front" | "back">("front");
+  const [coupon, setCoupon] = useState("");
+  const [couponApplied, setCouponApplied] = useState<{ code: string; pct: number } | null>(null);
+  const [couponError, setCouponError] = useState<string | null>(null);
   const [prevProductId, setPrevProductId] = useState(product?.id);
   if (product && product.id !== prevProductId) {
     setPrevProductId(product.id);
     setSize(product.sizes[0] ?? "");
     setColor(product.colors[0] ?? "");
-    setSide("front");
+    setCoupon("");
+    setCouponApplied(null);
+    setCouponError(null);
   }
 
   useEffect(() => {
@@ -34,6 +48,35 @@ export function ProductModal({ product, onClose, onAdd }: Props) {
   const pixPct = product
     ? pixDiscountPercent(product.priceCents, product.pixPriceCents)
     : 0;
+
+  const finalCents = useMemo(() => {
+    if (!product) return 0;
+    if (!couponApplied) return product.priceCents;
+    return Math.round(product.priceCents * (1 - couponApplied.pct / 100));
+  }, [product, couponApplied]);
+
+  function applyCoupon() {
+    const code = coupon.trim().toUpperCase();
+    if (!code) {
+      setCouponError("Digite um código.");
+      return;
+    }
+    const pct = COUPONS[code];
+    if (!pct) {
+      setCouponError("Cupom inválido.");
+      setCouponApplied(null);
+      return;
+    }
+    setCouponApplied({ code, pct });
+    setCouponError(null);
+  }
+
+  const waText = product
+    ? `Oi! Quero a ${product.name} (${color}, tam ${size || "—"}). Vi no site da NAST.`
+    : "";
+  const waHref = product
+    ? `https://wa.me/${whatsAppNumber}?text=${encodeURIComponent(waText)}`
+    : "#";
 
   return (
     <AnimatePresence>
@@ -61,65 +104,42 @@ export function ProductModal({ product, onClose, onAdd }: Props) {
               <Close className="h-4 w-4" />
             </button>
 
-            <div className="relative flex items-center justify-center bg-black/40 p-10">
-              <AnimatePresence mode="wait">
-                <motion.div
-                  key={side}
-                  initial={{ opacity: 0, rotateY: side === "back" ? 30 : -30 }}
-                  animate={{ opacity: 1, rotateY: 0 }}
-                  exit={{ opacity: 0, rotateY: side === "back" ? -30 : 30 }}
-                  transition={{ type: "spring", stiffness: 160, damping: 20 }}
-                >
-                  <ProductArt
-                    image={side === "front" ? product.image : product.backImage}
-                    color={color}
-                    size={360}
-                  />
-                </motion.div>
-              </AnimatePresence>
-
-              <div className="absolute bottom-4 left-1/2 flex -translate-x-1/2 gap-1 border border-white/10 bg-black/60 p-1 backdrop-blur">
-                {(["front", "back"] as const).map((s) => (
-                  <button
-                    key={s}
-                    onClick={() => setSide(s)}
-                    className={`relative px-3 py-1 text-[10px] font-bold uppercase tracking-[0.3em] transition ${
-                      side === s ? "text-black" : "text-white/60 hover:text-white"
-                    }`}
-                  >
-                    {side === s && (
-                      <motion.span
-                        layoutId="modal-side"
-                        className="absolute inset-0 bg-[var(--color-accent)]"
-                      />
-                    )}
-                    <span className="relative">
-                      {s === "front" ? "frente" : "costas"}
-                    </span>
-                  </button>
-                ))}
-              </div>
+            <div className="relative flex items-center justify-center bg-white p-6 md:p-10">
+              <ProductArt image={product.image} alt={product.name} size={420} />
             </div>
 
-            <div className="flex flex-col p-8">
-              <div className="eyebrow text-white/50">{product.category}</div>
+            <div className="flex flex-col overflow-y-auto p-8">
+              <div className="flex items-center justify-between">
+                <div className="eyebrow text-white/50">{product.category}</div>
+                <SizeChartLink />
+              </div>
               <h3 className="mt-3 text-3xl font-black tracking-tight text-white md:text-4xl">
                 {product.name}
               </h3>
               <div className="mt-4 flex items-baseline gap-3">
                 <span className="text-3xl font-black text-white">
-                  {formatBRL(product.priceCents)}
+                  {formatBRL(finalCents)}
                 </span>
-                {pixPct > 0 && (
+                {pixPct > 0 && !couponApplied && (
                   <span className="bg-[var(--color-accent)] px-2 py-0.5 text-[10px] font-bold uppercase tracking-widest text-black">
                     -{pixPct}% pix
                   </span>
                 )}
+                {couponApplied && (
+                  <span className="bg-[var(--color-accent)] px-2 py-0.5 text-[10px] font-bold uppercase tracking-widest text-black">
+                    -{couponApplied.pct}% {couponApplied.code}
+                  </span>
+                )}
               </div>
-              <div className="mt-1 text-sm text-white/70">
-                ou <span className="font-bold text-[var(--color-accent)]">{formatBRL(product.pixPriceCents)}</span>{" "}
-                no pix
-              </div>
+              {!couponApplied && (
+                <div className="mt-1 text-sm text-white/70">
+                  ou{" "}
+                  <span className="font-bold text-[var(--color-accent)]">
+                    {formatBRL(product.pixPriceCents)}
+                  </span>{" "}
+                  no pix
+                </div>
+              )}
 
               <p className="mt-6 text-sm leading-relaxed text-white/70">
                 {product.description}
@@ -147,7 +167,10 @@ export function ProductModal({ product, onClose, onAdd }: Props) {
               </div>
 
               <div className="mt-5">
-                <div className="eyebrow mb-3 text-white/50">Tamanho</div>
+                <div className="mb-3 flex items-center justify-between">
+                  <span className="eyebrow text-white/50">Tamanho</span>
+                  <SizeChartLink label="ver medidas" />
+                </div>
                 <div className="flex flex-wrap gap-2">
                   {product.sizes.map((s) => (
                     <motion.button
@@ -167,6 +190,52 @@ export function ProductModal({ product, onClose, onAdd }: Props) {
                 </div>
               </div>
 
+              <div className="mt-5">
+                <div className="eyebrow mb-3 text-white/50">Cupom</div>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="text"
+                    value={coupon}
+                    onChange={(e) => {
+                      setCoupon(e.target.value);
+                      setCouponError(null);
+                    }}
+                    placeholder="ex: NAST10"
+                    className="flex-1 border border-white/15 bg-transparent px-3 py-2.5 text-sm uppercase tracking-[0.2em] text-white placeholder-white/30 outline-none transition focus:border-[var(--color-accent)]"
+                  />
+                  <motion.button
+                    type="button"
+                    onClick={applyCoupon}
+                    whileHover={{ y: -1 }}
+                    whileTap={{ scale: 0.97 }}
+                    className="border border-white/20 px-4 py-2.5 text-[11px] font-bold uppercase tracking-[0.3em] text-white transition hover:border-white"
+                  >
+                    Aplicar
+                  </motion.button>
+                </div>
+                {couponError && (
+                  <div className="mt-2 text-xs text-[var(--color-accent-warn)]">
+                    {couponError}
+                  </div>
+                )}
+                {couponApplied && (
+                  <div className="mt-2 text-xs text-[var(--color-accent)]">
+                    Cupom {couponApplied.code} aplicado · -{couponApplied.pct}%
+                  </div>
+                )}
+              </div>
+
+              <motion.a
+                href={waHref}
+                target="_blank"
+                rel="noreferrer"
+                whileHover={{ y: -1 }}
+                whileTap={{ scale: 0.98 }}
+                className="mt-8 flex items-center justify-center gap-2 bg-[var(--color-accent)] px-6 py-4 text-xs font-black uppercase tracking-[0.3em] text-black transition hover:bg-white"
+              >
+                <WhatsApp className="h-4 w-4" />
+                Entrar em contato
+              </motion.a>
               <motion.button
                 onClick={() => {
                   onAdd(product, size, color);
@@ -174,7 +243,7 @@ export function ProductModal({ product, onClose, onAdd }: Props) {
                 }}
                 whileHover={{ y: -1 }}
                 whileTap={{ scale: 0.98 }}
-                className="mt-8 flex items-center justify-center gap-2 bg-[var(--color-accent)] px-6 py-4 text-xs font-black uppercase tracking-[0.3em] text-black transition hover:bg-white"
+                className="mt-2 flex items-center justify-center gap-2 border border-white/20 bg-transparent px-6 py-3.5 text-[11px] font-bold uppercase tracking-[0.3em] text-white transition hover:border-white"
               >
                 <Plus className="h-4 w-4" />
                 Adicionar à sacola

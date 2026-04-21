@@ -1,5 +1,5 @@
 import { motion, useScroll, useTransform } from "framer-motion";
-import { NestLogo } from "./NestLogo";
+import { NastLogo } from "./NastLogo";
 import { ShoppingBag } from "./icons";
 
 type Props = {
@@ -36,14 +36,14 @@ export function Header({ cartCount, onOpenCart }: Props) {
           whileHover={{ opacity: 0.8 }}
           whileTap={{ scale: 0.97 }}
         >
-          <NestLogo size={28} />
-          <span className="text-lg font-black tracking-[0.4em]">NEST</span>
+          <NastLogo size={28} />
+          <span className="text-lg font-black tracking-[0.4em]">NAST</span>
         </motion.a>
 
         <nav className="hidden items-center gap-10 text-xs font-semibold uppercase tracking-[0.25em] text-white/70 md:flex">
           {[
-            ["Drop", "#drop"],
             ["Loja", "#products"],
+            ["Medidas", "#products"],
             ["Manifesto", "#story"],
             ["Contato", "#newsletter"],
           ].map(([label, href]) => (

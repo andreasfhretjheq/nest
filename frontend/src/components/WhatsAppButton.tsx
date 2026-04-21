@@ -10,7 +10,7 @@ type Props = {
 // Hidden from viewers who prefer reduced motion (no pulse).
 export function WhatsAppButton({
   phone,
-  message = "Oi! Queria falar sobre o drop da NEST.",
+  message = "Oi! Queria falar sobre uma peça da NAST.",
 }: Props) {
   const href = `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
   return (

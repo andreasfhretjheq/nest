@@ -1,5 +1,5 @@
 import { AnimatePresence, motion } from "framer-motion";
-import { NestLogo } from "./NestLogo";
+import { NastLogo } from "./NastLogo";
 
 export function LoadingScreen({ show }: { show: boolean }) {
   return (
@@ -15,7 +15,7 @@ export function LoadingScreen({ show }: { show: boolean }) {
             animate={{ rotate: [0, 0, 180, 180, 360] }}
             transition={{ duration: 2.4, repeat: Infinity, ease: "easeInOut" }}
           >
-            <NestLogo size={64} />
+            <NastLogo size={64} />
           </motion.div>
           <motion.div
             initial={{ opacity: 0 }}
@@ -23,7 +23,7 @@ export function LoadingScreen({ show }: { show: boolean }) {
             transition={{ delay: 0.3 }}
             className="mt-6 text-[11px] font-bold uppercase tracking-[0.6em] text-white/60"
           >
-            NEST · carregando
+            NAST · carregando
           </motion.div>
         </motion.div>
       )}

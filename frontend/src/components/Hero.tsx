@@ -49,19 +49,17 @@ export function Hero() {
         aria-hidden="true"
         className="pointer-events-none absolute -right-40 top-10 select-none text-[32vw] font-black leading-none tracking-tighter text-white/[0.04]"
       >
-        NEST
+        NAST
       </motion.div>
 
-      {/* Square grid pattern. */}
+      {/* Soft vignette to keep the hero feeling like a lookbook page,
+          not a dashboard. */}
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute inset-0 opacity-[0.08]"
+        className="pointer-events-none absolute inset-0"
         style={{
-          backgroundImage:
-            "linear-gradient(rgba(255,255,255,0.6) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.6) 1px, transparent 1px)",
-          backgroundSize: "60px 60px",
-          maskImage:
-            "radial-gradient(ellipse at 50% 60%, #000 40%, transparent 80%)",
+          background:
+            "radial-gradient(ellipse at 50% 30%, rgba(255,255,255,0.04), transparent 60%)",
         }}
       />
 

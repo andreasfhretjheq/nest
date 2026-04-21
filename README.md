@@ -1,12 +1,12 @@
-# NEST — streetwear autoral
+# NAST — streetwear autoral
 
-Site da marca **NEST**. Drops limitados, estética minimalista e acabamento
+Site da marca **NAST**. Peças limitadas, estética minimalista e acabamento
 premium. Este repositório contém o frontend animado + o backend em Go.
 
 - **Backend:** Go 1.23, apenas stdlib, hardening embutido (security headers,
   CORS por allowlist, rate limit por IP, validação e limites de body).
 - **Frontend:** React 19 + Vite + TypeScript, Tailwind v4, Framer Motion,
-  canvas particles e ilustrações SVG frente/costas.
+  fotos reais dos produtos e tabela de medidas lateral.
 
 ## Estrutura
 
@@ -64,13 +64,18 @@ ao seed em memória do Go.
   `--color-accent` (padrão `#39ff14`).
 - **Produtos:** `backend/main.go` (seed em memória) + fallback em
   `frontend/src/data/fallback.ts`. Mantenha as duas listas em sincronia.
+- **Fotos dos produtos:** `frontend/public/products/` (referenciadas por
+  nome de arquivo no campo `image` de cada produto).
+- **Tabela de medidas:** `frontend/src/components/SizeChart.tsx` —
+  três tabelas (camiseta regular, boxy, baby look) exibidas num painel
+  lateral fixo ao lado do grid e num modal acessível pelo link
+  "tabela de medidas".
 
 ## Seções
 
-- Hero com tipografia gigante animada e parallax
-- Banner promo topo + marquee horizontal
-- Drop section com parallax editorial (NEST 01 / DROP DROP DROP)
-- Grid de produtos com hover frente/costas + preço Pix
+- Hero com tipografia gigante animada e parallax suave
+- Grid de produtos (4 peças reais) + tabela de medidas lateral
+- CTA primária: "entrar em contato" via WhatsApp; secundária: sacola
 - Manifesto (scroll reveal palavra a palavra)
 - Newsletter, footer com sociais, WhatsApp flutuante
 

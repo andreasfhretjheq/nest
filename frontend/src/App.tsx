@@ -3,12 +3,8 @@ import { api } from "./api";
 import { FALLBACK_PRODUCTS } from "./data/fallback";
 import type { CartItem, Product } from "./types";
 
-import { TopBanner } from "./components/TopBanner";
 import { Header } from "./components/Header";
 import { Hero } from "./components/Hero";
-import { Features } from "./components/Features";
-import { Marquee } from "./components/Marquee";
-import { DropSection } from "./components/DropSection";
 import { Products } from "./components/Products";
 import { Story } from "./components/Story";
 import { Newsletter } from "./components/Newsletter";
@@ -16,7 +12,6 @@ import { Footer } from "./components/Footer";
 import { Cart } from "./components/Cart";
 import { ProductModal } from "./components/ProductModal";
 import { ScrollProgress } from "./components/ScrollProgress";
-import { Particles } from "./components/Particles";
 import { LoadingScreen } from "./components/LoadingScreen";
 import { WhatsAppButton } from "./components/WhatsAppButton";
 
@@ -28,7 +23,7 @@ function cartKey(id: string, size: string, color: string) {
 
 function loadCart(): CartItem[] {
   try {
-    const raw = localStorage.getItem("nest:cart");
+    const raw = localStorage.getItem("nast:cart");
     if (!raw) return [];
     const parsed = JSON.parse(raw);
     if (!Array.isArray(parsed)) return [];
@@ -68,7 +63,7 @@ function App() {
   }, []);
 
   useEffect(() => {
-    localStorage.setItem("nest:cart", JSON.stringify(cart));
+    localStorage.setItem("nast:cart", JSON.stringify(cart));
   }, [cart]);
 
   const addToCart = useCallback(
@@ -125,17 +120,16 @@ function App() {
 
   return (
     <div className="noise relative min-h-full">
-      <Particles />
       <ScrollProgress />
-      <TopBanner />
       <Header cartCount={cartCount} onOpenCart={() => setCartOpen(true)} />
 
       <main>
         <Hero />
-        <Marquee />
-        <DropSection products={products} />
-        <Products products={products} onOpen={setModal} />
-        <Features />
+        <Products
+          products={products}
+          onOpen={setModal}
+          whatsAppNumber={WHATSAPP_NUMBER}
+        />
         <Story />
         <Newsletter />
       </main>
@@ -146,6 +140,7 @@ function App() {
         product={modal}
         onClose={() => setModal(null)}
         onAdd={addToCart}
+        whatsAppNumber={WHATSAPP_NUMBER}
       />
       <Cart
         open={cartOpen}

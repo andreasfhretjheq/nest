@@ -3,7 +3,7 @@ import type { MotionValue } from "framer-motion";
 import { useRef } from "react";
 
 const WORDS =
-  "NEST é um manifesto silencioso. Peças limitadas, construção honesta e zero barulho — feito pra quem veste o que acredita.";
+  "NAST é um manifesto silencioso. Peças limitadas, construção honesta e zero barulho — feito pra quem veste o que acredita.";
 
 export function Story() {
   const ref = useRef<HTMLDivElement | null>(null);
@@ -37,8 +37,8 @@ export function Story() {
       <div className="mt-20 grid grid-cols-1 gap-8 border-t border-white/10 pt-12 md:grid-cols-3">
         {[
           ["01", "Design", "Limpo, geométrico e sem excessos."],
-          ["02", "Materiais", "Algodão pesado, moletinho 440g, denim cru 14oz."],
-          ["03", "Ética", "Produção consciente e tiragem consciente."],
+          ["02", "Materiais", "Algodão 30.1 penteado e boxy 240g."],
+          ["03", "Ética", "Produção consciente e tiragem limitada."],
         ].map(([n, t, d], i) => (
           <motion.div
             key={n}
