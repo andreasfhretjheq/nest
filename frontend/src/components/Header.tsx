@@ -48,7 +48,7 @@ export function Header({ cartCount, onOpenCart }: Props) {
             ["Contato", "#newsletter"],
           ].map(([label, href]) => (
             <motion.a
-              key={href}
+              key={label}
               href={href}
               className="relative transition-colors hover:text-white"
               whileHover="hover"

@@ -1,5 +1,5 @@
 import { AnimatePresence, motion } from "framer-motion";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import type { Product } from "../types";
 import { ProductArt } from "./ProductArt";
 import { SizeChartLink } from "./SizeChart";
@@ -13,9 +13,10 @@ type Props = {
   whatsAppNumber: string;
 };
 
-// Known promo codes: coupon -> percent off (applied on top of the current
-// price, not stacked with Pix). Keep in sync with backend if we ever wire
-// it up there — for now it's a client-side teaser.
+// Promo codes the brand honors manually via WhatsApp. The displayed price
+// never changes client-side (the cart and the checkout API don't understand
+// coupons yet), so applying one just prepends the code to the WhatsApp
+// message and shows a confirmation below the input.
 const COUPONS: Record<string, number> = {
   NAST10: 10,
   BEMVINDO: 5,
@@ -49,12 +50,6 @@ export function ProductModal({ product, onClose, onAdd, whatsAppNumber }: Props)
     ? pixDiscountPercent(product.priceCents, product.pixPriceCents)
     : 0;
 
-  const finalCents = useMemo(() => {
-    if (!product) return 0;
-    if (!couponApplied) return product.priceCents;
-    return Math.round(product.priceCents * (1 - couponApplied.pct / 100));
-  }, [product, couponApplied]);
-
   function applyCoupon() {
     const code = coupon.trim().toUpperCase();
     if (!code) {
@@ -72,7 +67,12 @@ export function ProductModal({ product, onClose, onAdd, whatsAppNumber }: Props)
   }
 
   const waText = product
-    ? `Oi! Quero a ${product.name} (${color}, tam ${size || "—"}). Vi no site da NAST.`
+    ? [
+        `Oi! Quero a ${product.name} (${color}, tam ${size || "—"}). Vi no site da NAST.`,
+        couponApplied ? `Cupom: ${couponApplied.code}` : "",
+      ]
+        .filter(Boolean)
+        .join("\n")
     : "";
   const waHref = product
     ? `https://wa.me/${whatsAppNumber}?text=${encodeURIComponent(waText)}`
@@ -118,28 +118,21 @@ export function ProductModal({ product, onClose, onAdd, whatsAppNumber }: Props)
               </h3>
               <div className="mt-4 flex items-baseline gap-3">
                 <span className="text-3xl font-black text-white">
-                  {formatBRL(finalCents)}
+                  {formatBRL(product.priceCents)}
                 </span>
-                {pixPct > 0 && !couponApplied && (
+                {pixPct > 0 && (
                   <span className="bg-[var(--color-accent)] px-2 py-0.5 text-[10px] font-bold uppercase tracking-widest text-black">
                     -{pixPct}% pix
                   </span>
                 )}
-                {couponApplied && (
-                  <span className="bg-[var(--color-accent)] px-2 py-0.5 text-[10px] font-bold uppercase tracking-widest text-black">
-                    -{couponApplied.pct}% {couponApplied.code}
-                  </span>
-                )}
               </div>
-              {!couponApplied && (
-                <div className="mt-1 text-sm text-white/70">
-                  ou{" "}
-                  <span className="font-bold text-[var(--color-accent)]">
-                    {formatBRL(product.pixPriceCents)}
-                  </span>{" "}
-                  no pix
-                </div>
-              )}
+              <div className="mt-1 text-sm text-white/70">
+                ou{" "}
+                <span className="font-bold text-[var(--color-accent)]">
+                  {formatBRL(product.pixPriceCents)}
+                </span>{" "}
+                no pix
+              </div>
 
               <p className="mt-6 text-sm leading-relaxed text-white/70">
                 {product.description}
@@ -220,7 +213,8 @@ export function ProductModal({ product, onClose, onAdd, whatsAppNumber }: Props)
                 )}
                 {couponApplied && (
                   <div className="mt-2 text-xs text-[var(--color-accent)]">
-                    Cupom {couponApplied.code} aplicado · -{couponApplied.pct}%
+                    Cupom {couponApplied.code} · -{couponApplied.pct}% ao
+                    entrar em contato.
                   </div>
                 )}
               </div>
