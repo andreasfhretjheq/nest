@@ -29,6 +29,11 @@ export function Cart({ open, items, onClose, onUpdateQty, onRemove, onClear }: P
   const [error, setError] = useState<string | null>(null);
   const [usePix, setUsePix] = useState(true);
 
+  const handleClose = () => {
+    setOrder(null);
+    onClose();
+  };
+
   const totalCard = useMemo(
     () => items.reduce((acc, it) => acc + it.product.priceCents * it.quantity, 0),
     [items],
@@ -79,7 +84,7 @@ export function Cart({ open, items, onClose, onUpdateQty, onRemove, onClear }: P
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            onClick={onClose}
+            onClick={handleClose}
             className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm"
           />
           <motion.aside
@@ -100,7 +105,7 @@ export function Cart({ open, items, onClose, onUpdateQty, onRemove, onClear }: P
                 </div>
               </div>
               <motion.button
-                onClick={onClose}
+                onClick={handleClose}
                 whileHover={{ rotate: 90 }}
                 transition={{ type: "spring", stiffness: 260 }}
                 className="border border-white/10 p-2 text-white/70 hover:text-white"

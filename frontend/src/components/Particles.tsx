@@ -72,10 +72,14 @@ export function Particles() {
 
     resize();
     draw();
-    window.addEventListener("resize", resize);
+    const onResize = () => {
+      resize();
+      if (reduced) draw();
+    };
+    window.addEventListener("resize", onResize);
     return () => {
       cancelAnimationFrame(raf);
-      window.removeEventListener("resize", resize);
+      window.removeEventListener("resize", onResize);
     };
   }, []);
 
