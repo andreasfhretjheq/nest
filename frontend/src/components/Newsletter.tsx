@@ -12,6 +12,7 @@ export function Newsletter() {
     const v = email.trim();
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v)) {
       setError("Digite um email válido.");
+      setSent(false);
       return;
     }
     setError(null);
