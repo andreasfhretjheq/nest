@@ -4,6 +4,8 @@ import type { Product } from "../types";
 import { ProductCard } from "./ProductCard";
 import { SizeChartPanel, SizeChartLink } from "./SizeChart";
 import { WhatsApp } from "./icons";
+import { SecretUnlock } from "./SecretUnlock";
+import { SECRET_PRODUCT } from "../data/fallback";
 
 type Props = {
   products: Product[];
@@ -12,6 +14,11 @@ type Props = {
 };
 
 export function Products({ products, onOpen, whatsAppNumber }: Props) {
+  const [secretUnlocked, setSecretUnlocked] = useState(() => {
+    return localStorage.getItem("nast:secret") === "1";
+  });
+  const [showUnlock, setShowUnlock] = useState(false);
+
   const categories = useMemo(() => {
     const set = new Set<string>();
     products.forEach((p) => set.add(p.category));
@@ -30,6 +37,12 @@ export function Products({ products, onOpen, whatsAppNumber }: Props) {
   const waHref = `https://wa.me/${whatsAppNumber}?text=${encodeURIComponent(
     "Oi! Queria falar com a NAST sobre as peças.",
   )}`;
+
+  function handleUnlocked() {
+    localStorage.setItem("nast:secret", "1");
+    setSecretUnlocked(true);
+    setShowUnlock(false);
+  }
 
   return (
     <section id="products" className="relative mx-auto max-w-7xl px-6 py-28">
@@ -95,6 +108,30 @@ export function Products({ products, onOpen, whatsAppNumber }: Props) {
                 <ProductCard product={p} index={i} onOpen={onOpen} />
               </motion.div>
             ))}
+
+            {/* Card da peça secreta */}
+            {(active === "Todas") && (
+              <motion.div
+                key="secret-card"
+                layout
+                initial={{ opacity: 0, scale: 0.96 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.96 }}
+                transition={{ type: "spring", stiffness: 140, damping: 20 }}
+              >
+                {secretUnlocked ? (
+                  <ProductCard
+                    product={SECRET_PRODUCT}
+                    index={filtered.length}
+                    onOpen={onOpen}
+                  />
+                ) : showUnlock ? (
+                  <SecretUnlock onUnlocked={handleUnlocked} />
+                ) : (
+                  <LockedCard onReveal={() => setShowUnlock(true)} />
+                )}
+              </motion.div>
+            )}
           </AnimatePresence>
         </div>
 
@@ -113,5 +150,66 @@ export function Products({ products, onOpen, whatsAppNumber }: Props) {
         Ficou com dúvida? chama no zap
       </motion.a>
     </section>
+  );
+}
+
+function LockedCard({ onReveal }: { onReveal: () => void }) {
+  return (
+    <motion.div
+      className="group relative flex flex-col border border-white/10 bg-[var(--color-bg-soft)] text-left transition-colors hover:border-white/30 cursor-pointer"
+      whileHover={{ scale: 1.01 }}
+      transition={{ type: "spring", stiffness: 200, damping: 22 }}
+      onClick={onReveal}
+    >
+      {/* Imagem bloqueada com overlay */}
+      <div className="relative aspect-square w-full overflow-hidden bg-black flex items-center justify-center">
+        <motion.div
+          className="absolute inset-0 flex flex-col items-center justify-center gap-3"
+          animate={{ opacity: [0.6, 1, 0.6] }}
+          transition={{ repeat: Infinity, duration: 2.5, ease: "easeInOut" }}
+        >
+          <div className="text-5xl select-none">🔒</div>
+          <div className="eyebrow text-white/40 text-center px-4">ACESSO RESTRITO</div>
+        </motion.div>
+
+        {/* Scanlines effect */}
+        <div
+          className="absolute inset-0 pointer-events-none"
+          style={{
+            background:
+              "repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(255,255,255,0.03) 2px, rgba(255,255,255,0.03) 4px)",
+          }}
+        />
+
+        <div className="absolute left-3 top-3">
+          <span className="bg-red-600/90 px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.25em] text-white backdrop-blur">
+            secreto
+          </span>
+        </div>
+      </div>
+
+      <div className="flex flex-1 flex-col gap-3 p-4">
+        <div className="flex items-start justify-between gap-3">
+          <div className="min-w-0">
+            <div className="eyebrow text-white/30">???</div>
+            <div className="mt-1 text-base font-bold text-white/40 tracking-widest">
+              ██████████
+            </div>
+          </div>
+          <motion.button
+            whileHover={{ x: 2 }}
+            className="shrink-0 text-[11px] font-bold uppercase tracking-[0.3em] text-[var(--color-accent)]"
+          >
+            desbloquear →
+          </motion.button>
+        </div>
+
+        <div className="mt-auto border-t border-white/10 pt-3">
+          <div className="text-sm text-white/30 font-bold uppercase tracking-widest">
+            tem um código?
+          </div>
+        </div>
+      </div>
+    </motion.div>
   );
 }
